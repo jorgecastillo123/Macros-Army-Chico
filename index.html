@@ -1,1 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Macros - Armada Militar RP</title>
+    <style>
+        :root {
+            --bg-dark: #0f1410;
+            --bg-card: #18201a;
+            --bg-card-hover: #212c24;
+            --accent: #4b7a47;
+            --accent-hover: #5e9659;
+            --text-main: #e6ece7;
+            --text-muted: #93a396;
+            --border: #2c3a2f;
+            --danger: #b83b3b;
+            --warning: #c48f29;
+            --info: #3a7ca5;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #7ab874;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        /* Controles superiores */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            background: var(--bg-card);
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        input {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Filtros por categoría */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .filter-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Secciones y tarjetas */
+        .category-section {
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 1.15rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent);
+            color: #a3d19f;
+        }
+
+        .macro-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .macro-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s, border-color 0.2s;
+        }
+
+        .macro-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .macro-card:active {
+            transform: scale(0.995);
+        }
+
+        .macro-text {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95rem;
+            word-break: break-word;
+            color: var(--text-main);
+        }
+
+        .cmd-tag {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 4px;
+        }
+
+        .tag-flobby { background: rgba(58, 124, 165, 0.25); color: #7cc0eb; }
+        .tag-me { background: rgba(196, 143, 41, 0.25); color: #f0c36d; }
+        .tag-do { background: rgba(184, 59, 59, 0.25); color: #f28b8b; }
+
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .copy-btn.copied {
+            background: #2e8b57;
+        }
+
+        /* Notificación flotante (Toast) */
+        #toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #233326;
+            color: #fff;
+            border: 1px solid #5e9659;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(15px);
+            transition: all 0.25s ease;
+            z-index: 1000;
+            max-width: 90vw;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .macro-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .copy-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🪖 Macros Armada Militar</h1>
+        <p>Haz clic en cualquier macro o en el botón <strong>Copiar</strong> para enviarlo al portapapeles</p>
+    </header>
+
+    <!-- Personalización y Búsqueda -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="searchInput">🔍 Buscar macro o código (ej. 10-44, Túnel)</label>
+            <input type="text" id="searchInput" placeholder="Escribe para filtrar...">
+        </div>
+        <div class="control-group">
+            <label for="rankInput">🎖️ Tu Rango (Opcional)</label>
+            <input type="text" id="rankInput" placeholder="Ej. Cabo Primero">
+        </div>
+        <div class="control-group">
+            <label for="nameInput">🪪 Tu Nombre RP (Opcional)</label>
+            <input type="text" id="nameInput" placeholder="Ej. Carlos Mendoza">
+        </div>
+    </div>
+
+    <!-- Botones de Categoría -->
+    <div class="filters" id="filterContainer"></div>
+
+    <!-- Contenedor de Macros -->
+    <div id="macrosContainer"></div>
+</div>
+
+<div id="toast">✅ Macro copiado al portapapeles</div>
+
+<script>
+    const macroData = [
+        {
+            category: "Servicio y Códigos Básicos",
+            items: [
+                "/me ARMADA MILITAR, RANGO TU NOMBRE, MI MÁXIMO RESPETO SR(A)",
+                "/flobby 10-2 (AUTORIZADO/ PERMISO CONCEDIDO)",
+                "/flobby 10-10 (NEGATIVO / PERMISO DENEGADO)",
+                "/flobby 10-4 (COPIADO / ENTENDIDO)",
+                "/flobby 10-8 EN SERVICIO / ENTRADA, RANGO",
+                "/flobby 10-7 FUERA DE SERVICIO / SALIDA, RANGO",
+                "/flobby DESESTIMAR"
+            ]
+        },
+        {
+            category: "Advertencias, Cuenta Regresiva y Fuerza",
+            items: [
+                "/me MANTENGA DISTANCIA DE LA ENTRADA Y MANOS VISIBLES SIN ARMAS.",
+                "/me ÚLTIMA ADVERTENCIA, ZONA MILITAR RESTRINGIDA. ANTE CUALQUIER INCUMPLIMIENTO SERÁ NEUTRALIZADO.",
+                "/do 1RA (ADVERTENCIA) ESTAMOS AUTORIZADOS A EMPLEAR FUERZA LETAL SI NO CUMPLEN.",
+                "/do 2DA (ADVERTENCIA) SE LE HA PROPORCIONADO LA INFORMACIÓN, ESTA ES UN ÁREA RESTRINGIDA. ¡¡TIENE 5 SEGUNDOS PARA MARCHARSE!!",
+                "/do 3RA (ADVERTENCIA) ¡¡LA CUENTA REGRESIVA A COMENZADO!!",
+                "/me 5!",
+                "/me 4!",
+                "/me 3!",
+                "/me 2!",
+                "/me 1!",
+                "/do ¡FUEGO! SE RESPONDE EN DEFENSA PROPIA O DE CIVILES.",
+                "/do ¡TASER! INDIVIDUO INMOVILIZADO MEDIANTE DESCARGA ELÉCTRICA.",
+                "/do ¡TASER AL CONDUCTOR! DESCARGA DIRIGIDA AL PILOTO, EL VEHÍCULO PIERDE CONTROL Y SE DETIENE DE FORMA SEGURA.",
+                "/do ¡¡¡0 DISPAROS A CIVILES / PANDILLEROS!!!",
+                "/flobby 10-46 (INTRUSO ABATIDO / AMENAZA NEUTRALIZADA)",
+                "/me ¡¡USTED A SIDO IDENTIFICADO COMO PERSONA NO GRATA PARA LA FACCIÓN, SE ENCUENTRA EN LISTA NEGRA Y POR LO TANTO SERA ABATIDO!!",
+                "/me ABANDONEN INMEDIATAMENTE LAS INMEDIACIONES DE LA BASE MILITAR CONFORME AL CRITERIO ADMINISTRATIVO VIGENTE, ESTA ES UNA ORDEN DIRECTA DEL PERSONAL MILITAR, SI SE NIEGAN A COOPERAR SERAN CATALOGADOS COMO AMENAZAS."
+            ]
+        },
+        {
+            category: "10-44 (Intrusos por Zona)",
+            items: [
+                "/flobby 10-44 (INTRUSO) EN [ES]",
+                "/flobby 10-44 (INTRUSO) EN [EN]",
+                "/flobby 10-44 (INTRUSO) EN [TÚNEL]",
+                "/flobby 10-44 (INTRUSO) EN [AP-RAMPA]",
+                "/flobby 10-44 (INTRUSO) EN  [CONTENEDOR ROJO]",
+                "/flobby 10-44 (INTRUSO) EN [TC]",
+                "/flobby 10-44 (INTRUSO) EN [SEDE CENTRAL]"
+            ]
+        },
+        {
+            category: "10-33 (Emergencia / Zona Hostil / DEFCON 3)",
+            items: [
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [ES]",
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [EN]",
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [TÚNEL]",
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [AP-RAMPA]",
+                "/flobby 10-33 (EMERGENCIA) — ( ZONA HOSTIL)  [CONTENEDOR ROJO]",
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [TC]",
+                "/flobby 10-33 (EMERGENCIA) — 20-3 (ZONA HOSTIL)  [SEDE CENTRAL]",
+                "/flobby 10-33 (EMERGENCIA) — [ES]  |DEFCON 3 ACTIVO EN BASE",
+                "/flobby 10-33 (EMERGENCIA) — [EN]  | DEFCON 3 ACTIVO EN BASE",
+                "/flobby 10-33 (EMERGENCIA) — [TÚNEL]  | DEFCON 3 ACTIVO EN BASE",
+                "/flobby 10-33 (EMERGENCIA) — [CONTENEDOR ROJO]  | DEFCON 3 ACTIVO EN BASE",
+                "/flobby 10-33 (EMERGENCIA) — [TC]  | DEFCON 3 ACTIVADO EN BASE",
+                "/flobby 10-33 (EMERGENCIA) — [SEDE CENTRAL]  | DEFCON 3 ACTIVADO EN BASE"
+            ]
+        },
+        {
+            category: "10-35 / 10-23 / 10-39 (Patrullaje y Accesos)",
+            items: [
+                "/flobby 10-35 (SIN NOVEDAD / SITUACIÓN NORMAL)  [ES]",
+                "/flobby 10-35 (SIN NOVEDAD / SITUACIÓN NORMAL)  [EN]",
+                "/flobby 10-35 (SIN NOVEDAD / SITUACIÓN NORMAL)  [TÚNEL]",
+                "/flobby 10-35 (SIN NOVEDAD / SITUACIÓN NORMAL)  [AP-RAMPA]",
+                "/flobby 10-35 (SIN NOVEDAD / SITUACIÓN NORMAL)  [CONTENEDOR ROJO]",
+                "/flobby 10-23 (EN EL LUGAR / PRESENTE EN)  [ES]",
+                "/flobby 10-23 (EN EL LUGAR / PRESENTE EN)  [EN]",
+                "/flobby 10-23 (EN EL LUGAR / PRESENTE EN)  [TÚNEL]",
+                "/flobby 10-23 (EN LUGAR/ PRESENTE EN)  [CONTENEDOR ROJO]",
+                "/flobby 10-39 (ACCESO BLOQUEADO / RUTA CORTADA)  [ES]",
+                "/flobby 10-39 (ACCESO BLOQUEADO / RUTA CORTADA)  [EN]"
+            ]
+        },
+        {
+            category: "Relevos, Permisos y Reclutamiento",
+            items: [
+                "/flobby ¡¡¡ SE NECESITA RELEVO EN LA PUERTA SUR !!!",
+                "/flobby ¡¡¡ SE NECESITA RELEVO EN LA PUERTA NORTE !!!",
+                "/flobby ¡¡¡ SE NECESITA RELEVO EN TUNNEL !!!",
+                "/flobby SOLICITO PERMISO PARA REALIZAR VIGILANCIA",
+                "/flobby SOLICITO PERMISO PARA SPAWNEAR VEHÍCULO DE MISIÓN DIARIA",
+                "/flobby SOLICITO PERMISO PARA RECARGAR MUNICIÓNES",
+                "/flobby EN PERMISO CON UN GENERAL",
+                "/flobby REGRESANDO DE PERMISO CON UN GENERAL",
+                "/flobby RECONECTANDO POR FALLA DE INTERNET",
+                "/flobby ESTOY DE VACACIONES! APARECÍ EN ENFERMERÍA Y ME RETIRO POR ENTRADA NORTE, NO DISPARAR POR FAVOR.",
+                "/me REQUISITOS DE INGRESO: NIVEL 6, +16, DOMINIO DEL ESPAÑOL, SIN INFRACCIONES NI AFILIACIONES ILEGALES, NI PERTENECER A FACCIÓN, MICRÓFONO FUNCIONAL, NOMBRE RP DEBE COINCIDIR CON DISCORD Y TENER CERTIFICADO DE INTEGRACIÓN SOCIAL. LUN A VIER 23:00 Y 02:00, LOS SAB 16:20 Y 23:00"
+            ]
+        }
+    ];
+
+    let activeCategory = "Todas";
+    const searchInput = document.getElementById("searchInput");
+    const rankInput = document.getElementById("rankInput");
+    const nameInput = document.getElementById("nameInput");
+    const filterContainer = document.getElementById("filterContainer");
+    const macrosContainer = document.getElementById("macrosContainer");
+    const toast = document.getElementById("toast");
+
+    // Guardar y cargar Rango y Nombre en localStorage
+    rankInput.value = localStorage.getItem("rp_rank") || "";
+    nameInput.value = localStorage.getItem("rp_name") || "";
+
+    function applyPersonalization(text) {
+        const rank = rankInput.value.trim().toUpperCase();
+        const name = nameInput.value.trim().toUpperCase();
+        let result = text;
+
+        if (rank && name) {
+            result = result.replace("RANGO TU NOMBRE", `${rank} ${name}`);
+        } else if (rank) {
+            result = result.replace("RANGO TU NOMBRE", `${rank} TU NOMBRE`);
+        } else if (name) {
+            result = result.replace("RANGO TU NOMBRE", `RANGO ${name}`);
+        }
+
+        if (rank) {
+            result = result.replace(/, RANGO$/, `, ${rank}`);
+        }
+
+        return result;
+    }
+
+    function formatMacroHTML(text) {
+        if (text.startsWith("/flobby")) {
+            return `<span class="cmd-tag tag-flobby">/flobby</span>${text.slice(7)}`;
+        } else if (text.startsWith("/me")) {
+            return `<span class="cmd-tag tag-me">/me</span>${text.slice(3)}`;
+        } else if (text.startsWith("/do")) {
+            return `<span class="cmd-tag tag-do">/do</span>${text.slice(3)}`;
+        }
+        return text;
+    }
+
+    function renderFilters() {
+        const categories = ["Todas", ...macroData.map(c => c.category)];
+        filterContainer.innerHTML = "";
+        categories.forEach(cat => {
+            const btn = document.createElement("button");
+            btn.className = `filter-btn ${activeCategory === cat ? "active" : ""}`;
+            btn.textContent = cat;
+            btn.onclick = () => {
+                activeCategory = cat;
+                renderFilters();
+                renderMacros();
+            };
+            filterContainer.appendChild(btn);
+        });
+    }
+
+    function showToast(copiedText) {
+        toast.textContent = `✅ Copiado: ${copiedText.length > 55 ? copiedText.substring(0, 55) + "..." : copiedText}`;
+        toast.classList.add("show");
+        clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2200);
+    }
+
+    async function copyToClipboard(text, btnElement) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            // Respaldo para navegadores antiguos
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+        }
+
+        const originalText = btnElement.textContent;
+        btnElement.textContent = "¡Copiado!";
+        btnElement.classList.add("copied");
+        showToast(text);
+
+        setTimeout(() => {
+            btnElement.textContent = originalText;
+            btnElement.classList.remove("copied");
+        }, 1200);
+    }
+
+    function renderMacros() {
+        const query = searchInput.value.toLowerCase().trim();
+        macrosContainer.innerHTML = "";
+
+        macroData.forEach(group => {
+            if (activeCategory !== "Todas" && activeCategory !== group.category) return;
+
+            const filteredItems = group.items
+                .map(rawText => applyPersonalization(rawText))
+                .filter(text => text.toLowerCase().includes(query));
+
+            if (filteredItems.length === 0) return;
+
+            const section = document.createElement("div");
+            section.className = "category-section";
+
+            const title = document.createElement("h2");
+            title.className = "category-title";
+            title.textContent = group.category;
+            section.appendChild(title);
+
+            const list = document.createElement("div");
+            list.className = "macro-list";
+
+            filteredItems.forEach(macroText => {
+                const card = document.createElement("div");
+                card.className = "macro-card";
+
+                const textDiv = document.createElement("div");
+                textDiv.className = "macro-text";
+                textDiv.innerHTML = formatMacroHTML(macroText);
+
+                const btn = document.createElement("button");
+                btn.className = "copy-btn";
+                btn.textContent = "Copiar";
+
+                card.onclick = () => copyToClipboard(macroText, btn);
+
+                card.appendChild(textDiv);
+                card.appendChild(btn);
+                list.appendChild(card);
+            });
+
+            section.appendChild(list);
+            macrosContainer.appendChild(section);
+        });
+    }
+
+    searchInput.addEventListener("input", renderMacros);
+    rankInput.addEventListener("input", () => {
+        localStorage.setItem("rp_rank", rankInput.value);
+        renderMacros();
+    });
+    nameInput.addEventListener("input", () => {
+        localStorage.setItem("rp_name", nameInput.value);
+        renderMacros();
+    });
+
+    renderFilters();
+    renderMacros();
+</script>
+
+</body>
+</html>
